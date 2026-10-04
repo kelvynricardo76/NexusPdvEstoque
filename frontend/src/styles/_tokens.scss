@@ -1,0 +1,116 @@
+// Nexus Design System — tokens.
+// Tema escuro é o padrão da aplicação. `.nx-theme-light` redefine os tokens para
+// superfícies claras (ex.: card de login), de modo que os componentes funcionem em ambos.
+
+:root {
+  // Superfícies
+  --nx-bg: #0a0f0d;
+  --nx-bg-elevated: #0e1411;
+  --nx-surface: #111714;
+  --nx-surface-2: #161d19;
+  --nx-surface-3: #1b241f;
+  --nx-border: #1f2a24;
+  --nx-border-strong: #2a3831;
+
+  // Marca
+  --nx-primary: #a3e635;
+  --nx-primary-hover: #bef264;
+  --nx-primary-press: #84cc16;
+  --nx-primary-soft: rgba(163, 230, 53, 0.12);
+  --nx-primary-line: rgba(163, 230, 53, 0.28);
+  --nx-on-primary: #0a0f0d;
+
+  // Texto
+  --nx-text: #f3f5f4;
+  --nx-text-muted: #8b958f;
+  --nx-text-subtle: #5f6964;
+  --nx-link: var(--nx-primary);
+
+  // Estados
+  --nx-success: #22c55e;
+  --nx-success-soft: rgba(34, 197, 94, 0.14);
+  --nx-warning: #f59e0b;
+  --nx-warning-soft: rgba(245, 158, 11, 0.14);
+  --nx-danger: #ef4444;
+  --nx-danger-soft: rgba(239, 68, 68, 0.14);
+  --nx-info: #3b82f6;
+  --nx-info-soft: rgba(59, 130, 246, 0.14);
+
+  // Campos
+  --nx-input-bg: var(--nx-surface-2);
+  --nx-input-border: var(--nx-border-strong);
+  --nx-input-text: var(--nx-text);
+  --nx-input-placeholder: var(--nx-text-subtle);
+  --nx-input-icon: var(--nx-text-muted);
+
+  // Botão escuro (usado em superfícies claras)
+  --nx-dark-btn-bg: #0d1411;
+  --nx-dark-btn-hover: #1a241f;
+  --nx-dark-btn-text: #ffffff;
+
+  // Tipografia
+  --nx-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --nx-font-display: 'Plus Jakarta Sans', var(--nx-font-sans);
+  --nx-text-xs: 0.75rem;
+  --nx-text-sm: 0.875rem;
+  --nx-text-md: 1rem;
+  --nx-text-lg: 1.125rem;
+  --nx-text-xl: 1.375rem;
+  --nx-text-2xl: 1.75rem;
+
+  // Espaçamento (escala de 4px)
+  --nx-space-1: 0.25rem;
+  --nx-space-2: 0.5rem;
+  --nx-space-3: 0.75rem;
+  --nx-space-4: 1rem;
+  --nx-space-5: 1.25rem;
+  --nx-space-6: 1.5rem;
+  --nx-space-8: 2rem;
+  --nx-space-10: 2.5rem;
+  --nx-space-12: 3rem;
+
+  // Forma
+  --nx-radius-sm: 6px;
+  --nx-radius-md: 10px;
+  --nx-radius-lg: 14px;
+  --nx-radius-xl: 20px;
+
+  // Profundidade
+  --nx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --nx-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --nx-glow: 0 0 24px rgba(163, 230, 53, 0.12);
+  --nx-focus-ring: 0 0 0 3px rgba(163, 230, 53, 0.35);
+
+  // Movimento
+  --nx-ease: cubic-bezier(0.2, 0, 0, 1);
+  --nx-duration: 160ms;
+
+  color-scheme: dark;
+}
+
+.nx-theme-light {
+  --nx-bg: #f4f6f5;
+  --nx-bg-elevated: #fafbfa;
+  --nx-surface: #ffffff;
+  --nx-surface-2: #f8faf9;
+  --nx-surface-3: #eff2f0;
+  --nx-border: #e4e9e6;
+  --nx-border-strong: #cfd7d2;
+
+  --nx-text: #0d1411;
+  --nx-text-muted: #56615b;
+  --nx-text-subtle: #8a948e;
+  --nx-link: #0d1411;
+
+  --nx-input-bg: #ffffff;
+  --nx-input-border: #d5dcd8;
+  --nx-input-text: #0d1411;
+  --nx-input-placeholder: #8a948e;
+  --nx-input-icon: #56615b;
+
+  --nx-shadow-sm: 0 1px 2px rgba(13, 20, 17, 0.06);
+  --nx-shadow-md: 0 12px 32px rgba(13, 20, 17, 0.08);
+  --nx-focus-ring: 0 0 0 3px rgba(132, 204, 22, 0.35);
+
+  color-scheme: light;
+}

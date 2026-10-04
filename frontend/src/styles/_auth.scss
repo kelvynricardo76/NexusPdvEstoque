@@ -1,0 +1,76 @@
+// Estilos compartilhados dos formulários de acesso (login, recuperação de senha, Super Admin).
+@use 'mixins';
+
+.login__card-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--nx-space-4);
+  margin-bottom: var(--nx-space-8);
+}
+
+.login__card-title {
+  font-size: var(--nx-text-xl);
+  font-weight: 700;
+  color: var(--nx-text);
+
+  @include mixins.below(mixins.$breakpoint-sm) {
+    font-size: var(--nx-text-lg);
+  }
+}
+
+.login__card-subtitle {
+  margin-top: var(--nx-space-1);
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-5);
+}
+
+.login__forgot {
+  font-size: var(--nx-text-sm);
+  font-weight: 600;
+}
+
+.login__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nx-radius-sm);
+  background: transparent;
+  color: var(--nx-input-icon);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--nx-text);
+  }
+
+  &:focus-visible {
+    @include mixins.focus-ring;
+  }
+}
+
+.login__submit {
+  margin-top: var(--nx-space-1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login__back {
+  margin-top: var(--nx-space-5);
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+  text-align: center;
+
+  a {
+    font-weight: 600;
+  }
+}

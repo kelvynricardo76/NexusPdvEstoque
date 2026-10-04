@@ -1,0 +1,67 @@
+<nx-auth-layout [eyebrow]="platform ? 'Painel administrativo da plataforma' : 'Sistema de PDV e estoque para o seu negócio'">
+  <header class="login__card-header">
+    <nx-logo [size]="52" />
+    <div>
+      <h2 class="login__card-title">{{ platform ? 'Nexus Development' : 'Nexus PDV & Estoque' }}</h2>
+      <p class="login__card-subtitle">
+        {{ platform ? 'Acesso restrito ao Super Admin' : 'Acesse o ambiente da sua empresa' }}
+      </p>
+    </div>
+  </header>
+
+  <form class="login__form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <nx-form-field [label]="platform ? 'E-mail' : 'E-mail ou usuário'" for="login-email" [error]="emailError()">
+      <nx-icon nxPrefix [name]="platform ? 'mail' : 'user'" [size]="18" />
+      <input
+        id="login-email"
+        class="nx-input"
+        [type]="platform ? 'email' : 'text'"
+        formControlName="email"
+        [placeholder]="platform ? 'seu@email.com' : 'seu@email.com ou usuário'"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        [attr.aria-invalid]="!!emailError()"
+        [attr.aria-describedby]="emailError() ? 'login-email-error' : null"
+      />
+    </nx-form-field>
+
+    <nx-form-field label="Senha" for="login-password" [error]="passwordError()">
+      @if (!platform) {
+        <a nxLabelAction class="login__forgot" routerLink="/esqueci-senha">Esqueci minha senha</a>
+      }
+      <nx-icon nxPrefix name="lock" [size]="18" />
+      <input
+        id="login-password"
+        class="nx-input"
+        formControlName="password"
+        placeholder="••••••••••"
+        autocomplete="current-password"
+        [type]="passwordVisible() ? 'text' : 'password'"
+        [attr.aria-invalid]="!!passwordError()"
+        [attr.aria-describedby]="passwordError() ? 'login-password-error' : null"
+      />
+      <button
+        nxSuffix
+        type="button"
+        class="login__toggle"
+        (click)="togglePasswordVisibility()"
+        [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+        [attr.aria-pressed]="passwordVisible()"
+      >
+        <nx-icon [name]="passwordVisible() ? 'eye-off' : 'eye'" [size]="20" />
+      </button>
+    </nx-form-field>
+
+    @if (notice(); as message) {
+      <nx-alert tone="success">{{ message }}</nx-alert>
+    }
+    @if (error(); as message) {
+      <nx-alert tone="danger">{{ message }}</nx-alert>
+    }
+
+    <button nxButton type="submit" variant="dark" size="lg" [block]="true" [loading]="loading()" class="login__submit">
+      Entrar
+    </button>
+  </form>
+</nx-auth-layout>

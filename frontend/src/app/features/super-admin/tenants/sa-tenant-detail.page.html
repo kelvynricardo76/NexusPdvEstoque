@@ -1,0 +1,173 @@
+<div class="nx-page">
+  @if (error(); as message) {
+    <nx-error-state [message]="message" (retry)="load()" />
+  } @else if (!tenant()) {
+    <nx-skeleton [rows]="10" />
+  } @else {
+    @let t = tenant()!;
+    <nx-page-header [title]="t.tradeName || t.name" [subtitle]="'Cliente desde ' + (t.createdAt | date: 'dd/MM/yyyy')">
+      <a nxButton variant="secondary" routerLink="/super-admin/empresas"><nx-icon name="arrow-left" [size]="16" /> Empresas</a>
+      @if (t.administrativeStatus === 'ACTIVE') {
+        <button nxButton variant="danger" type="button" [disabled]="busy()" (click)="changeStatus('SUSPEND')">Suspender</button>
+      } @else {
+        <button nxButton type="button" [disabled]="busy()" (click)="changeStatus('REACTIVATE')">Reativar</button>
+      }
+      @if (t.administrativeStatus !== 'CANCELED') {
+        <button nxButton variant="ghost" type="button" [disabled]="busy()" (click)="changeStatus('CANCEL')">Cancelar</button>
+      }
+    </nx-page-header>
+
+    <div class="nx-grid nx-grid--kpi">
+      <div class="nx-panel">
+        <span class="text-muted text-small">Situação</span>
+        <nx-badge [tone]="statuses[t.status].tone">{{ statuses[t.status].label }}</nx-badge>
+        @if (t.statusReason) { <span class="text-muted text-small">Motivo: {{ t.statusReason }}</span> }
+        <span class="text-small">{{ t.operable ? 'Operando normalmente' : 'Operação bloqueada' }}</span>
+      </div>
+      <div class="nx-panel"><span class="text-muted text-small">Plano</span><strong>{{ t.subscription?.planName ?? '—' }}</strong>
+        <span class="text-small">MRR {{ (t.subscription?.monthlyRecurringRevenue ?? 0) | currency }}</span></div>
+      <div class="nx-panel"><span class="text-muted text-small">Uso</span>
+        <span class="text-small">{{ t.usage.activeUsers }} usuários • {{ t.usage.products }} produtos</span>
+        <span class="text-small">{{ t.usage.salesThisMonth }} vendas no mês</span></div>
+    </div>
+
+    <nav class="nx-tabs">
+      <button type="button" [class.is-active]="tab() === 'info'" (click)="selectTab('info')">Informações</button>
+      <button type="button" [class.is-active]="tab() === 'subscription'" (click)="selectTab('subscription')">Assinatura</button>
+      <button type="button" [class.is-active]="tab() === 'features'" (click)="selectTab('features')">Funcionalidades</button>
+      <button type="button" [class.is-active]="tab() === 'limits'" (click)="selectTab('limits')">Limites</button>
+      <button type="button" [class.is-active]="tab() === 'users'" (click)="selectTab('users')">Usuários</button>
+      <button type="button" [class.is-active]="tab() === 'audit'" (click)="selectTab('audit')">Auditoria</button>
+    </nav>
+
+    @switch (tab()) {
+      @case ('info') {
+        <section class="nx-panel">
+          <div class="nx-form-grid">
+            <div class="nx-form-grid__full"><label class="nx-label" for="d-name">Razão social</label>
+              <input id="d-name" class="nx-control" [ngModel]="info().name" (ngModelChange)="updateInfo('name', $event)" /></div>
+            <div><label class="nx-label" for="d-trade">Nome fantasia</label>
+              <input id="d-trade" class="nx-control" [ngModel]="info().tradeName" (ngModelChange)="updateInfo('tradeName', $event)" /></div>
+            <div><label class="nx-label" for="d-doc">Documento</label>
+              <input id="d-doc" class="nx-control" [ngModel]="info().document" (ngModelChange)="updateInfo('document', $event)" /></div>
+            <div><label class="nx-label" for="d-email">E-mail</label>
+              <input id="d-email" class="nx-control" [ngModel]="info().email" (ngModelChange)="updateInfo('email', $event)" /></div>
+            <div><label class="nx-label" for="d-phone">Telefone</label>
+              <input id="d-phone" class="nx-control" [ngModel]="info().phone" (ngModelChange)="updateInfo('phone', $event)" /></div>
+          </div>
+          <div class="nx-actions"><button nxButton type="button" [loading]="busy()" (click)="saveInfo()">Salvar</button></div>
+        </section>
+      }
+
+      @case ('subscription') {
+        <div class="nx-grid nx-grid--2">
+          <section class="nx-panel">
+            <h2 class="nx-panel__title">Plano</h2>
+            <div class="nx-form-grid">
+              <div><label class="nx-label" for="d-plan">Plano</label>
+                <select id="d-plan" class="nx-control" [ngModel]="planCode()" (ngModelChange)="planCode.set($event)">
+                  @for (plan of plans(); track plan.code) { <option [value]="plan.code" [disabled]="!plan.active">{{ plan.name }}{{ plan.active ? '' : ' (inativo)' }}</option> }
+                </select></div>
+              <div><label class="nx-label" for="d-cycle">Ciclo</label>
+                <select id="d-cycle" class="nx-control" [ngModel]="billingCycle()" (ngModelChange)="billingCycle.set($event)">
+                  <option value="MONTHLY">Mensal</option><option value="ANNUAL">Anual</option>
+                </select></div>
+            </div>
+            <div class="nx-actions"><button nxButton type="button" [loading]="busy()" (click)="changePlan()">Alterar plano</button></div>
+            <p class="text-muted text-small">A troca de plano altera funcionalidades e limites imediatamente e fica registrada na auditoria.</p>
+          </section>
+          <section class="nx-panel">
+            <h2 class="nx-panel__title">Situação comercial</h2>
+            <div class="nx-form-grid">
+              <div><label class="nx-label" for="d-status">Status</label>
+                <select id="d-status" class="nx-control" [ngModel]="subStatus()" (ngModelChange)="subStatus.set($event)">
+                  <option value="TRIAL">Trial</option><option value="ACTIVE">Ativa</option><option value="PAST_DUE">Inadimplente</option>
+                  <option value="SUSPENDED">Suspensa</option><option value="CANCELED">Cancelada</option>
+                </select></div>
+              <div><label class="nx-label" for="d-trial">Fim do trial</label>
+                <input id="d-trial" class="nx-control" type="date" [ngModel]="trialEnd()" (ngModelChange)="trialEnd.set($event)" /></div>
+              <div><label class="nx-label" for="d-ps">Início do período</label>
+                <input id="d-ps" class="nx-control" type="date" [ngModel]="periodStart()" (ngModelChange)="periodStart.set($event)" /></div>
+              <div><label class="nx-label" for="d-pe">Fim do período</label>
+                <input id="d-pe" class="nx-control" type="date" [ngModel]="periodEnd()" (ngModelChange)="periodEnd.set($event)" /></div>
+            </div>
+            <div class="nx-actions">
+              <button nxButton variant="secondary" type="button" [disabled]="busy()" (click)="issueInvoice()">Emitir fatura</button>
+              <button nxButton type="button" [loading]="busy()" (click)="saveSubscription()">Salvar assinatura</button>
+            </div>
+          </section>
+        </div>
+      }
+
+      @case ('features') {
+        <section class="nx-table-wrap">
+          <table class="nx-table nx-table--stack">
+            <thead><tr><th>Funcionalidade</th><th>No plano</th><th>Exceção</th><th>Resultado</th></tr></thead>
+            <tbody>
+              @for (feature of t.entitlements.features; track feature.code) {
+                <tr>
+                  <td class="nx-stack-main nx-table__main">{{ featureLabel(feature.code) }}</td>
+                  <td data-label="No plano">{{ feature.inPlan ? 'Sim' : 'Não' }}</td>
+                  <td data-label="Exceção">
+                    <select class="nx-control" style="width: 190px" [ngModel]="featureChoice(feature.override)" (ngModelChange)="setFeature(feature.code, $event)">
+                      <option value="PLAN">Seguir o plano</option><option value="ON">Conceder</option><option value="OFF">Revogar</option>
+                    </select>
+                  </td>
+                  <td><nx-badge [tone]="feature.effective ? 'success' : 'neutral'">{{ feature.effective ? 'Liberada' : 'Bloqueada' }}</nx-badge></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+
+      @case ('limits') {
+        <section class="nx-table-wrap">
+          <table class="nx-table nx-table--stack">
+            <thead><tr><th>Limite</th><th class="num">Padrão</th><th class="num">Plano</th><th>Exceção (−1 = ilimitado)</th><th class="num">Efetivo</th></tr></thead>
+            <tbody>
+              @for (limit of t.entitlements.limits; track limit.code) {
+                <tr>
+                  <td class="nx-stack-main nx-table__main">{{ limitLabel(limit.code, limit.name) }}</td>
+                  <td class="num" data-label="Padrão">{{ limitText(limit.defaultValue) }}</td>
+                  <td class="num" data-label="Plano">{{ limitText(limit.planValue) }}</td>
+                  <td data-label="Exceção">
+                    <span style="display: inline-flex; gap: 6px">
+                      <input class="nx-control" style="width: 110px" type="number" min="-1" placeholder="Plano"
+                             [ngModel]="limitDrafts()[limit.code]" (ngModelChange)="setLimitDraft(limit.code, $event === null ? '' : '' + $event)" />
+                      <button nxButton size="sm" variant="secondary" type="button" (click)="saveLimit(limit.code)">Aplicar</button>
+                    </span>
+                  </td>
+                  <td class="num" data-label="Efetivo"><strong>{{ limitText(limit.effective) }}</strong></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+
+      @case ('users') {
+        <section class="nx-table-wrap">
+          <table class="nx-table nx-table--stack">
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Cargo</th><th>Status</th><th>Último acesso</th></tr></thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td class="nx-stack-main nx-table__main">{{ user.name }}</td>
+                  <td data-label="E-mail">{{ user.email }}</td>
+                  <td data-label="Cargo">{{ user.role }}</td>
+                  <td><nx-badge [tone]="user.status === 'ACTIVE' ? 'success' : 'neutral'">{{ user.status === 'ACTIVE' ? 'Ativo' : 'Inativo' }}</nx-badge></td>
+                  <td data-label="Último acesso">{{ user.lastLoginAt ? (user.lastLoginAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+
+      @case ('audit') {
+        <section class="nx-table-wrap"><nx-audit-table [entries]="audit()" /></section>
+      }
+    }
+  }
+</div>

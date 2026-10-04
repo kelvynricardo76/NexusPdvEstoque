@@ -1,0 +1,39 @@
+# Perfil de produção. Todos os valores sensíveis vêm de variáveis de ambiente (ver .env.example).
+# O seed de demonstração NÃO existe neste perfil (DevDataSeeder é @Profile("dev")).
+spring:
+  datasource:
+    url: ${NEXUS_DB_URL}
+    username: ${NEXUS_DB_USER}
+    password: ${NEXUS_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${NEXUS_DB_POOL_SIZE:10}
+
+server:
+  # Atrás de proxy reverso HTTPS: usa X-Forwarded-* para IP real e esquema https.
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+nexus:
+  security:
+    dev-tools: false
+    password-reset:
+      log-links: false
+      frontend-base-url: ${NEXUS_FRONTEND_URL}
+
+logging:
+  # Logs estruturados (JSON/ECS) com traceId no MDC para correlação.
+  structured:
+    format:
+      console: ecs
+  level:
+    root: INFO
+    com.nexus.pdv: INFO

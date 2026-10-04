@@ -1,0 +1,108 @@
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: 999px;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+
+    &.is-active {
+      border-color: var(--nx-primary);
+      background: var(--nx-primary-soft);
+      color: var(--nx-primary);
+    }
+
+    &.is-done {
+      color: var(--nx-text-muted);
+    }
+  }
+}
+
+.file-input {
+  padding: 6px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: var(--nx-space-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nx-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mapping {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--nx-space-3);
+}
+
+.mapping__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-1);
+  font-size: var(--nx-text-sm);
+  font-weight: 600;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--nx-space-3);
+
+  div {
+    display: flex;
+    flex-direction: column;
+    padding: var(--nx-space-3) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+
+    span {
+      color: var(--nx-text-muted);
+      font-size: var(--nx-text-xs);
+    }
+
+    strong {
+      font-family: var(--nx-font-display);
+      font-size: var(--nx-text-xl);
+    }
+
+    &.is-ok strong {
+      color: var(--nx-primary);
+    }
+
+    &.is-bad strong {
+      color: var(--nx-danger);
+    }
+  }
+}
+
+.row-error td {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.error-line {
+  display: block;
+  color: var(--nx-danger);
+  font-size: var(--nx-text-xs);
+}
+
+.rejected {
+  margin: 0;
+  padding-left: var(--nx-space-5);
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+}

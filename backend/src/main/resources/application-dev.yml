@@ -1,0 +1,39 @@
+# Perfil de desenvolvimento local — H2 em arquivo (dados persistem entre reinícios).
+# Nunca usar este perfil em produção.
+spring:
+  datasource:
+    url: jdbc:h2:file:${NEXUS_H2_PATH:./data/nexus-dev};MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: ${NEXUS_DB_USER:sa}
+    password: ${NEXUS_DB_PASSWORD:}
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+
+nexus:
+  security:
+    dev-tools: true
+    password-reset:
+      log-links: true
+  # Dados de demonstração (Loja Exemplo, Erick Ricardo...). Somente no perfil dev.
+  dev-seed:
+    enabled: ${NEXUS_DEV_SEED:true}
+    password: ${NEXUS_DEV_PASSWORD:Nexus@2026}
+  # Atalho de login local: usuário "admin" / senha "admin" → administrador da Loja Exemplo.
+  dev-login:
+    username: admin
+    email: admin@lojaexemplo.com.br
+    password: admin
+
+logging:
+  level:
+    com.nexus.pdv: DEBUG

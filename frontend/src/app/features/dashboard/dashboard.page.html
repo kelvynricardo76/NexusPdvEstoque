@@ -1,0 +1,142 @@
+<div class="nx-page">
+  <div class="greeting">
+    <div>
+      <h1>Olá, {{ session.firstName() }}!</h1>
+      <p class="text-muted">{{ subtitle() }}</p>
+    </div>
+    <nx-period-filter [value]="period()" (valueChange)="changePeriod($event)" />
+  </div>
+
+  @if (error(); as message) {
+    <nx-error-state [message]="message" (retry)="load()" />
+  } @else if (loading() && !data()) {
+    <div class="nx-grid nx-grid--kpi">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="nx-panel"><nx-skeleton [rows]="3" /></div>
+      }
+    </div>
+    <div class="nx-panel"><nx-skeleton [rows]="6" [height]="24" /></div>
+  } @else if (data(); as d) {
+    <div class="nx-grid nx-grid--kpi" [class.is-loading]="loading()">
+      <nx-stat-card
+        icon="dollar"
+        [label]="isToday() ? 'Vendas hoje' : 'Vendas no período'"
+        [value]="money(d.kpis.salesTotal)"
+        [variation]="d.kpis.salesTotalVariation"
+        [hint]="d.kpis.salesTotalVariation !== null && d.kpis.salesTotalVariation !== undefined ? 'em relação ao período anterior' : 'Sem vendas no período anterior'"
+      />
+      <nx-stat-card
+        icon="receipt"
+        label="Número de vendas"
+        [value]="(d.kpis.salesCount | number) ?? '0'"
+        [variation]="d.kpis.salesCountVariation"
+        [hint]="d.kpis.salesCountVariation !== null && d.kpis.salesCountVariation !== undefined ? 'em relação ao período anterior' : 'Ticket médio ' + money(d.kpis.averageTicket)"
+      />
+      <nx-stat-card
+        icon="package"
+        label="Produtos em estoque"
+        [value]="(d.kpis.productsInStock | number) ?? '0'"
+        [hint]="d.kpis.lowStock + d.kpis.outOfStock > 0 ? d.kpis.lowStock + ' baixo • ' + d.kpis.outOfStock + ' sem estoque' : 'Estoque saudável'"
+        [hintTone]="d.kpis.outOfStock > 0 ? 'danger' : d.kpis.lowStock > 0 ? 'warning' : 'muted'"
+      />
+      <nx-stat-card
+        icon="users"
+        label="Clientes ativos"
+        [value]="(d.kpis.activeCustomers | number) ?? '0'"
+        [hint]="'Ticket médio ' + money(d.kpis.averageTicket)"
+      />
+    </div>
+
+    <div class="nx-grid nx-grid--main-side">
+      <section class="nx-panel">
+        <div class="nx-panel__header">
+          <h2 class="nx-panel__title">Vendas nos últimos 7 dias</h2>
+          <span class="text-muted text-small">Vendas (R$)</span>
+        </div>
+        <nx-bar-chart [data]="last7()" [height]="220" ariaLabel="Vendas nos últimos 7 dias" />
+      </section>
+      <section class="nx-panel">
+        <div class="nx-panel__header"><h2 class="nx-panel__title">Formas de pagamento</h2></div>
+        <nx-donut-chart [segments]="payments()" />
+      </section>
+    </div>
+
+    <div class="nx-grid nx-grid--main-side">
+      <section class="nx-panel">
+        <div class="nx-panel__header">
+          <h2 class="nx-panel__title">{{ isToday() ? 'Vendas por hora' : 'Vendas por dia' }}</h2>
+          <span class="text-muted text-small">{{ d.from | slice: 8 : 10 }}/{{ d.from | slice: 5 : 7 }} – {{ d.to | slice: 8 : 10 }}/{{ d.to | slice: 5 : 7 }}</span>
+        </div>
+        @if (isToday()) {
+          <nx-bar-chart [data]="hourly()" [height]="200" ariaLabel="Vendas por hora" />
+        } @else {
+          <nx-line-chart [data]="trend()" [height]="200" />
+        }
+      </section>
+      <section class="nx-panel">
+        <div class="nx-panel__header"><h2 class="nx-panel__title">Produtos mais vendidos</h2></div>
+        @for (product of d.topProducts; track product.productId; let i = $index) {
+          <div class="top-item">
+            <span class="top-item__rank">{{ i + 1 }}</span>
+            <div class="top-item__body">
+              <div class="top-item__line">
+                <span class="top-item__name">{{ product.name }}</span>
+                <span class="num">{{ product.quantity | number: '1.0-3' }}</span>
+              </div>
+              <div class="nx-progress"><span [style.width.%]="(product.quantity / topMax()) * 100"></span></div>
+            </div>
+          </div>
+        } @empty {
+          <p class="text-muted text-small">Nenhuma venda no período.</p>
+        }
+      </section>
+    </div>
+
+    <div class="nx-grid nx-grid--2">
+      <section class="nx-panel">
+        <div class="nx-panel__header">
+          <h2 class="nx-panel__title">Estoque baixo</h2>
+          @if (session.hasPermission('STOCK_READ')) {
+            <a routerLink="/estoque" class="text-small">Ver estoque</a>
+          }
+        </div>
+        @for (item of d.attention; track item.productId) {
+          <div class="stock-item">
+            <nx-icon name="package" [size]="16" />
+            <span class="stock-item__name">{{ item.name }}</span>
+            <span class="num text-small" [class.text-danger]="item.situation === 'OUT_OF_STOCK'"
+                  [class.text-warning]="item.situation === 'LOW_STOCK'">
+              {{ item.currentStock | number: '1.0-3' }} {{ item.unit | lowercase }}
+            </span>
+            <nx-badge [tone]="situation[item.situation].tone">{{ situation[item.situation].label }}</nx-badge>
+          </div>
+        } @empty {
+          <p class="text-muted text-small">Nenhum produto abaixo do estoque mínimo. 🎉</p>
+        }
+      </section>
+
+      @if (d.advanced; as advanced) {
+        <section class="nx-panel">
+          <div class="nx-panel__header">
+            <h2 class="nx-panel__title">Indicadores avançados</h2>
+            <nx-icon name="sparkles" [size]="16" class="text-primary" />
+          </div>
+          <dl class="nx-definition">
+            @if (advanced.grossProfit !== null && advanced.grossProfit !== undefined) {
+              <dt>Lucro bruto</dt>
+              <dd class="text-primary">{{ advanced.grossProfit | currency }}</dd>
+              <dt>Margem</dt>
+              <dd>{{ advanced.marginPercent | number: '1.0-1' }}%</dd>
+            }
+            <dt>Descontos concedidos</dt>
+            <dd>{{ advanced.discountTotal | currency }}</dd>
+            <dt>Vendas canceladas</dt>
+            <dd>{{ advanced.canceledCount }}</dd>
+          </dl>
+        </section>
+      } @else if (showAdvancedLock()) {
+        <nx-locked-feature title="Dashboard avançado: lucro, margem e vendas por horário" feature="ADVANCED_DASHBOARD" />
+      }
+    </div>
+  }
+</div>

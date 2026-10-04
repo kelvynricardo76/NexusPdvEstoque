@@ -1,0 +1,158 @@
+<div class="nx-page">
+  <nx-page-header title="Importação de dados" subtitle="Traga seus cadastros de planilhas CSV ou XLSX com segurança" />
+
+  <ol class="steps">
+    <li [class.is-active]="step() === 'upload'" [class.is-done]="step() !== 'upload'">1. Arquivo</li>
+    <li [class.is-active]="step() === 'mapping'" [class.is-done]="step() === 'preview' || step() === 'done'">2. Mapeamento</li>
+    <li [class.is-active]="step() === 'preview'" [class.is-done]="step() === 'done'">3. Validação</li>
+    <li [class.is-active]="step() === 'done'">4. Relatório</li>
+  </ol>
+
+  <section class="nx-panel">
+    @switch (step()) {
+      @case ('upload') {
+        <div class="nx-form-grid">
+          <div>
+            <label class="nx-label" for="i-type">O que você vai importar?</label>
+            <select id="i-type" class="nx-control" [ngModel]="type()" (ngModelChange)="type.set($event)">
+              @for (option of types(); track option) {
+                <option [value]="option">{{ typeLabels[option] }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="nx-label" for="i-file">Arquivo (CSV ou XLSX, até 5 MB)</label>
+            <input id="i-file" class="nx-control file-input" type="file" accept=".csv,.xlsx,.txt" (change)="onFile($event)" />
+          </div>
+        </div>
+        <p class="text-muted text-small">
+          A primeira linha deve conter os cabeçalhos. Nenhum dado é gravado antes da sua confirmação.
+          <button type="button" class="link" (click)="downloadTemplate()"><nx-icon name="download" [size]="14" /> Baixar modelo</button>
+        </p>
+        @if (error(); as message) { <nx-alert tone="danger">{{ message }}</nx-alert> }
+        <div class="nx-actions">
+          <button nxButton type="button" [loading]="busy()" (click)="send()"><nx-icon name="upload" [size]="16" /> Enviar arquivo</button>
+        </div>
+      }
+
+      @case ('mapping') {
+        @if (upload(); as u) {
+          <p class="text-small">
+            <strong>{{ u.fileName }}</strong> • {{ u.totalRows }} linha(s). Relacione cada campo do sistema com uma coluna do arquivo.
+          </p>
+          <div class="mapping">
+            @for (field of u.fields; track field.key) {
+              <label class="mapping__row">
+                <span>{{ field.label }} @if (field.required) { <span class="text-danger">*</span> }</span>
+                <select class="nx-control" [ngModel]="mapping()[field.key] ?? ''" (ngModelChange)="setMapping(field.key, $event)">
+                  <option value="">— Não importar —</option>
+                  @for (column of u.columns; track $index) {
+                    <option [value]="$index">{{ column || 'Coluna ' + ($index + 1) }}</option>
+                  }
+                </select>
+              </label>
+            }
+          </div>
+          @if (u.sample.length) {
+            <p class="text-muted text-small">Amostra do arquivo</p>
+            <div class="nx-table-wrap"><div class="nx-table-scroll">
+              <table class="nx-table">
+                <thead><tr>@for (column of u.columns; track $index) { <th>{{ column }}</th> }</tr></thead>
+                <tbody>@for (row of u.sample; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> }</tbody>
+              </table>
+            </div></div>
+          }
+          @if (error(); as message) { <nx-alert tone="danger">{{ message }}</nx-alert> }
+          <div class="nx-actions">
+            <button nxButton variant="secondary" type="button" (click)="restart()">Voltar</button>
+            <button nxButton type="button" [loading]="busy()" (click)="validate()">Validar dados</button>
+          </div>
+        }
+      }
+
+      @case ('preview') {
+        @if (validation(); as v) {
+          <div class="summary">
+            <div><span>Total</span><strong>{{ v.totalRows }}</strong></div>
+            <div class="is-ok"><span>Válidas</span><strong>{{ v.validRows }}</strong></div>
+            <div [class.is-bad]="v.invalidRows > 0"><span>Com erro</span><strong>{{ v.invalidRows }}</strong></div>
+          </div>
+          <div class="nx-table-wrap"><div class="nx-table-scroll">
+            <table class="nx-table">
+              <thead><tr><th>Linha</th>@for (key of previewKeys(); track key) { <th>{{ fieldLabel(key) }}</th> }<th>Resultado</th></tr></thead>
+              <tbody>
+                @for (row of v.preview; track row.rowNumber) {
+                  <tr [class.row-error]="row.errors.length">
+                    <td>{{ row.rowNumber }}</td>
+                    @for (key of previewKeys(); track key) { <td>{{ row.values[key] || '—' }}</td> }
+                    <td>
+                      @if (row.errors.length) {
+                        @for (message of row.errors; track message) { <span class="error-line">{{ message }}</span> }
+                      } @else { <nx-badge tone="success">OK</nx-badge> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div></div>
+          @if (v.preview.length < v.totalRows) {
+            <p class="text-muted text-small">Exibindo as primeiras {{ v.preview.length }} linhas.</p>
+          }
+          @if (v.invalidRows > 0) {
+            <label class="nx-check">
+              <input type="checkbox" [ngModel]="skipInvalid()" (ngModelChange)="skipInvalid.set($event)" />
+              Importar somente as {{ v.validRows }} linhas válidas e ignorar as {{ v.invalidRows }} com erro (constarão no relatório)
+            </label>
+          }
+          @if (error(); as message) { <nx-alert tone="danger">{{ message }}</nx-alert> }
+          <div class="nx-actions">
+            <button nxButton variant="secondary" type="button" (click)="step.set('mapping')">Ajustar mapeamento</button>
+            <button nxButton type="button" [loading]="busy()" [disabled]="v.validRows === 0" (click)="confirm()">Confirmar importação</button>
+          </div>
+        }
+      }
+
+      @case ('done') {
+        @if (report(); as r) {
+          <nx-alert tone="success">Importação de {{ typeLabels[r.entityType] }} concluída.</nx-alert>
+          <div class="summary">
+            <div class="is-ok"><span>Criados</span><strong>{{ r.createdCount }}</strong></div>
+            <div><span>Atualizados</span><strong>{{ r.updatedCount }}</strong></div>
+            <div [class.is-bad]="r.skippedCount > 0"><span>Ignorados</span><strong>{{ r.skippedCount }}</strong></div>
+          </div>
+          @if (r.rejectedRows.length) {
+            <p class="text-small">Linhas não importadas</p>
+            <ul class="rejected">
+              @for (row of r.rejectedRows; track row.rowNumber) {
+                <li><strong>Linha {{ row.rowNumber }}:</strong> {{ row.errors.join(' • ') }}</li>
+              }
+            </ul>
+          }
+          <div class="nx-actions"><button nxButton type="button" (click)="restart()">Nova importação</button></div>
+        }
+      }
+    }
+  </section>
+
+  @if (history().length) {
+    <section class="nx-table-wrap">
+      <div class="nx-panel__header" style="padding: 1rem 1rem 0"><h2 class="nx-panel__title">Importações recentes</h2></div>
+      <table class="nx-table nx-table--stack">
+        <thead><tr><th>Arquivo</th><th>Tipo</th><th>Data</th><th class="num">Criados</th><th class="num">Atualizados</th><th class="num">Ignorados</th><th>Status</th></tr></thead>
+        <tbody>
+          @for (job of history(); track job.id) {
+            <tr>
+              <td class="nx-stack-main nx-table__main">{{ job.fileName }}</td>
+              <td data-label="Tipo">{{ typeLabels[job.entityType] }}</td>
+              <td data-label="Data">{{ job.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="num" data-label="Criados">{{ job.createdCount }}</td>
+              <td class="num" data-label="Atualizados">{{ job.updatedCount }}</td>
+              <td class="num" data-label="Ignorados">{{ job.skippedCount }}</td>
+              <td><nx-badge [tone]="job.status === 'COMPLETED' ? 'success' : 'neutral'">{{ job.status === 'COMPLETED' ? 'Concluída' : 'Não confirmada' }}</nx-badge></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</div>

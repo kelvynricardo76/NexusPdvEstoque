@@ -1,0 +1,220 @@
+@use 'mixins';
+
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  min-height: 100dvh;
+
+  @include mixins.below(mixins.$breakpoint-md) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// ---------- Painel da marca (esquerda) ----------
+
+.login__brand {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  background-color: var(--nx-bg);
+  @include mixins.hex-pattern(0.07, 150px);
+
+  // Linha de luz na divisa com o painel claro.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, transparent 0%, var(--nx-primary) 45%, transparent 100%);
+    opacity: 0.55;
+    box-shadow: 0 0 24px 2px rgba(163, 230, 53, 0.35);
+  }
+
+  @include mixins.below(mixins.$breakpoint-md) {
+    display: none;
+  }
+}
+
+.login__brand-glow {
+  position: absolute;
+  top: -10%;
+  right: -15%;
+  width: 60%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(163, 230, 53, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.login__brand-watermark {
+  position: absolute;
+  top: 7%;
+  right: 7%;
+  opacity: 0.4;
+  pointer-events: none;
+
+  @include mixins.below(mixins.$breakpoint-lg) {
+    display: none;
+  }
+}
+
+.login__brand-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-10);
+  width: 100%;
+  max-width: 680px;
+  padding: var(--nx-space-12) clamp(2rem, 5vw, 4.5rem);
+}
+
+.login__pitch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-4);
+  margin-top: auto;
+}
+
+.login__eyebrow {
+  color: var(--nx-primary);
+  font-size: var(--nx-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.login__headline {
+  font-size: clamp(2.5rem, 4.2vw, 3.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+}
+
+.login__headline-accent {
+  display: block;
+  color: var(--nx-primary);
+}
+
+.login__lead {
+  max-width: 560px;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-lg);
+  line-height: 1.6;
+}
+
+.login__highlights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nx-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.login__highlight {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-4);
+  padding: var(--nx-space-4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--nx-radius-lg);
+  background: rgba(22, 29, 25, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.login__highlight-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border: 1px solid var(--nx-primary-line);
+  border-radius: var(--nx-radius-md);
+  background: rgba(163, 230, 53, 0.08);
+  color: var(--nx-primary);
+}
+
+.login__highlight-title {
+  display: block;
+  color: var(--nx-text);
+  font-size: var(--nx-text-md);
+  font-weight: 700;
+}
+
+.login__highlight-text {
+  display: block;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+}
+
+.login__tagline {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-4);
+  margin-top: auto;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+
+  &::before {
+    content: '';
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--nx-primary);
+  }
+}
+
+// ---------- Painel de acesso (direita) ----------
+
+.login__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nx-space-8) var(--nx-space-4);
+  background: var(--nx-bg);
+  color: var(--nx-text);
+}
+
+.login__panel-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nx-space-6);
+  width: 100%;
+  max-width: 460px;
+}
+
+.login__card {
+  width: 100%;
+  min-width: 0;
+  padding: var(--nx-space-8);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-surface);
+  box-shadow: var(--nx-shadow-md);
+
+  @include mixins.below(mixins.$breakpoint-sm) {
+    padding: var(--nx-space-6);
+  }
+}
+
+.login__footer {
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+  text-align: center;
+
+  strong {
+    color: var(--nx-text);
+  }
+}

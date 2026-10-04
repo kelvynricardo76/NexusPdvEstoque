@@ -1,0 +1,166 @@
+@let me = session.me();
+<div class="shell">
+  <aside class="sidebar" [class.is-open]="drawerOpen()" aria-label="Menu principal">
+    <div class="sidebar__brand">
+      <nx-logo [size]="40" [wordmark]="true" />
+      <button type="button" class="sidebar__close" (click)="drawerOpen.set(false)" aria-label="Fechar menu">
+        <nx-icon name="x" [size]="18" />
+      </button>
+    </div>
+
+    <nav class="sidebar__nav">
+      @for (item of navigation.items(); track item.route) {
+        @if (item.locked) {
+          <a class="nav-item is-locked" [routerLink]="['/upgrade']" [queryParams]="{ feature: item.feature }"
+             title="Disponível em um plano superior">
+            <nx-icon [name]="item.icon" [size]="18" />
+            <span>{{ item.label }}</span>
+            <nx-icon name="lock" [size]="14" class="nav-item__lock" />
+          </a>
+        } @else {
+          <a class="nav-item" [routerLink]="item.route" routerLinkActive="is-active">
+            <nx-icon [name]="item.icon" [size]="18" />
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+
+    @if (me?.subscription; as subscription) {
+      <div class="sidebar__plan">
+        <span class="sidebar__plan-label">Plano</span>
+        <strong>{{ subscription.planName }}</strong>
+        @if (me?.tenantAdmin) {
+          <a routerLink="/configuracoes/assinatura">Ver assinatura</a>
+        }
+      </div>
+    }
+  </aside>
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="drawerOpen.set(false)"></div>
+  }
+
+  <div class="main">
+    <header class="header">
+      <button type="button" class="header__menu" (click)="drawerOpen.set(true)" aria-label="Abrir menu">
+        <nx-icon name="menu" [size]="20" />
+      </button>
+
+      <div class="header__search">
+        <nx-icon name="search" [size]="16" />
+        <input
+          type="search"
+          placeholder="Buscar no sistema..."
+          aria-label="Buscar no sistema"
+          [value]="query()"
+          (input)="onSearch($any($event.target).value)"
+          (focus)="searchOpen.set(hasResults())"
+        />
+        @if (searchOpen() && results(); as r) {
+          <div class="dropdown search-results">
+            @if (!hasResults()) {
+              <p class="dropdown__empty">Nenhum resultado para "{{ query() }}".</p>
+            }
+            @if (r.products.length) {
+              <p class="dropdown__group">Produtos</p>
+              @for (hit of r.products; track hit.id) {
+                <button type="button" class="dropdown__item" (click)="openResult('/produtos', hit.id)">
+                  <nx-icon name="tag" [size]="16" /> <span>{{ hit.title }}</span><small>{{ hit.subtitle }}</small>
+                </button>
+              }
+            }
+            @if (r.customers.length) {
+              <p class="dropdown__group">Clientes</p>
+              @for (hit of r.customers; track hit.id) {
+                <button type="button" class="dropdown__item" (click)="openResult('/clientes', hit.id)">
+                  <nx-icon name="user" [size]="16" /> <span>{{ hit.title }}</span><small>{{ hit.subtitle }}</small>
+                </button>
+              }
+            }
+            @if (r.sales.length) {
+              <p class="dropdown__group">Vendas</p>
+              @for (hit of r.sales; track hit.id) {
+                <button type="button" class="dropdown__item" (click)="openResult('/vendas', hit.id)">
+                  <nx-icon name="receipt" [size]="16" /> <span>{{ hit.title }}</span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <div class="header__tenant" title="Empresa atual">
+        @if (me?.tenant?.logoDataUrl) {
+          <img [src]="me!.tenant.logoDataUrl" alt="" />
+        } @else {
+          <nx-icon name="store" [size]="16" />
+        }
+        <span>{{ me?.tenant?.tradeName }}</span>
+      </div>
+
+      <div class="header__actions">
+        <div class="popover-anchor">
+          <button type="button" class="icon-button" (click)="toggleNotifications()" aria-label="Notificações">
+            <nx-icon name="bell" [size]="19" />
+            @if (notifications().length) {
+              <span class="badge-dot">{{ notifications().length }}</span>
+            }
+          </button>
+          @if (notificationsOpen()) {
+            <div class="dropdown notifications">
+              <p class="dropdown__title">Notificações</p>
+              @for (item of notifications(); track item.type) {
+                <a class="notification" [attr.data-severity]="item.severity" [href]="item.link"
+                   (click)="$event.preventDefault(); notificationsOpen.set(false); router.navigateByUrl(item.link)">
+                  <nx-icon [name]="item.severity === 'info' ? 'info' : 'alert-triangle'" [size]="16" />
+                  <span><strong>{{ item.title }}</strong><small>{{ item.message }}</small></span>
+                </a>
+              } @empty {
+                <p class="dropdown__empty">Tudo em ordem por aqui.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="popover-anchor">
+          <button type="button" class="user" (click)="toggleUserMenu()" aria-label="Menu do usuário">
+            <span class="user__avatar">{{ initials() }}</span>
+            <span class="user__text">
+              <strong>{{ me?.user?.name }}</strong>
+              <small>{{ me?.user?.role?.name }}</small>
+            </span>
+            <nx-icon name="chevron-down" [size]="14" />
+          </button>
+          @if (userMenuOpen()) {
+            <div class="dropdown user-menu">
+              <a class="dropdown__item" routerLink="/configuracoes/conta"><nx-icon name="user" [size]="16" /> Minha conta</a>
+              <a class="dropdown__item" routerLink="/configuracoes"><nx-icon name="settings" [size]="16" /> Configurações</a>
+              <button type="button" class="dropdown__item" (click)="logout()"><nx-icon name="log-out" [size]="16" /> Sair</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    @if (subscriptionWarning(); as warning) {
+      <div class="subscription-banner"><nx-icon name="alert-triangle" [size]="16" /> {{ warning }}</div>
+    }
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navegação rápida">
+    @for (item of navigation.mobileItems(); track item.route) {
+      <a [routerLink]="item.route" routerLinkActive="is-active">
+        <nx-icon [name]="item.icon" [size]="20" />
+        <span>{{ item.label }}</span>
+      </a>
+    }
+    <button type="button" (click)="drawerOpen.set(true)">
+      <nx-icon name="menu" [size]="20" />
+      <span>Menu</span>
+    </button>
+  </nav>
+</div>

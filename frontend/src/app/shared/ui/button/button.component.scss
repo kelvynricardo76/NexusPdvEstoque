@@ -1,0 +1,113 @@
+@use 'mixins';
+
+:host {
+  --btn-bg: var(--nx-primary);
+  --btn-bg-hover: var(--nx-primary-hover);
+  --btn-text: var(--nx-on-primary);
+  --btn-border: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nx-space-2);
+  height: 44px;
+  padding: 0 var(--nx-space-5);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--nx-radius-md);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-family: var(--nx-font-sans);
+  font-size: var(--nx-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--nx-duration) var(--nx-ease),
+    border-color var(--nx-duration) var(--nx-ease),
+    box-shadow var(--nx-duration) var(--nx-ease);
+
+  &:hover:not([disabled]) {
+    background: var(--btn-bg-hover);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    @include mixins.focus-ring;
+  }
+
+  &[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+:host([data-variant='secondary']) {
+  --btn-bg: var(--nx-surface-2);
+  --btn-bg-hover: var(--nx-surface-3);
+  --btn-text: var(--nx-text);
+  --btn-border: var(--nx-border-strong);
+}
+
+:host([data-variant='ghost']) {
+  --btn-bg: transparent;
+  --btn-bg-hover: var(--nx-primary-soft);
+  --btn-text: var(--nx-text);
+}
+
+:host([data-variant='danger']) {
+  --btn-bg: var(--nx-danger);
+  --btn-bg-hover: #dc2626;
+  --btn-text: #ffffff;
+}
+
+:host([data-variant='dark']) {
+  --btn-bg: var(--nx-dark-btn-bg);
+  --btn-bg-hover: var(--nx-dark-btn-hover);
+  --btn-text: var(--nx-dark-btn-text);
+}
+
+:host([data-size='sm']) {
+  height: 34px;
+  padding: 0 var(--nx-space-3);
+  font-size: var(--nx-text-xs);
+}
+
+:host([data-size='lg']) {
+  height: 50px;
+  padding: 0 var(--nx-space-6);
+  font-size: var(--nx-text-md);
+}
+
+:host(.nx-btn--block) {
+  display: flex;
+  width: 100%;
+}
+
+:host(.nx-btn--loading) {
+  opacity: 0.85;
+  cursor: progress;
+}
+
+.nx-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nx-space-2);
+}
+
+.nx-btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: nx-spin 0.7s linear infinite;
+}
+
+@keyframes nx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

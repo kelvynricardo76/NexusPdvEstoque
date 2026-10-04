@@ -1,0 +1,102 @@
+@use 'tokens';
+@use 'mixins';
+@use 'components';
+@use 'auth';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--nx-bg);
+  color: var(--nx-text);
+  font-family: var(--nx-font-sans);
+  font-size: var(--nx-text-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--nx-font-display);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--nx-link);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include mixins.focus-ring;
+    border-radius: var(--nx-radius-sm);
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: rgba(163, 230, 53, 0.3);
+}
+
+.nx-visually-hidden {
+  @include mixins.visually-hidden;
+}
+
+// Impressão: somente o comprovante.
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .nx-print-area,
+  .nx-print-area * {
+    visibility: visible;
+  }
+
+  .nx-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

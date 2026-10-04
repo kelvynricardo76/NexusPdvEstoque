@@ -1,0 +1,198 @@
+<div class="pdv">
+  <section class="pdv__catalog">
+    <div class="pdv__search">
+      <nx-icon name="scan" [size]="18" />
+      <input
+        #searchInput
+        type="search"
+        placeholder="Buscar por nome, SKU ou código de barras"
+        aria-label="Buscar produto"
+        autocomplete="off"
+        [value]="query()"
+        (input)="onQuery($any($event.target).value)"
+        (keydown.enter)="onEnter()"
+      />
+      <span class="nx-kbd">F2</span>
+    </div>
+
+    @if (categories().length) {
+      <div class="nx-chips pdv__categories">
+        <button type="button" class="nx-chip" [class.is-active]="!categoryId()" (click)="selectCategory(null)">Todos</button>
+        @for (category of categories(); track category.id) {
+          <button type="button" class="nx-chip" [class.is-active]="categoryId() === category.id" (click)="selectCategory(category.id)">
+            {{ category.name }}
+          </button>
+        }
+      </div>
+    }
+
+    <div class="pdv__grid" [class.is-loading]="searching()">
+      @for (product of products(); track product.id) {
+        <button type="button" class="product" (click)="add(product)" [class.is-out]="product.currentStock <= 0">
+          <span class="product__icon"><nx-icon name="package" [size]="22" /></span>
+          <span class="product__name">{{ product.name }}</span>
+          <span class="product__meta">{{ product.sku || product.barcode || product.categoryName || '—' }}</span>
+          <span class="product__footer">
+            <strong>{{ product.salePrice | currency }}</strong>
+            <small [class.text-danger]="product.currentStock <= 0" [class.text-warning]="product.situation === 'LOW_STOCK'">
+              {{ product.currentStock | number: '1.0-3' }} {{ product.unit }}
+            </small>
+          </span>
+        </button>
+      } @empty {
+        <nx-empty-state icon="search" title="Nenhum produto encontrado" message="Tente outro nome, SKU ou código." />
+      }
+    </div>
+  </section>
+
+  <aside class="pdv__cart">
+    <div class="cart__header">
+      <h2>Venda atual</h2>
+      <button type="button" class="nx-icon-button is-danger" (click)="cancelCurrentSale()" [disabled]="!cart().length"
+              aria-label="Limpar venda" title="Limpar venda">
+        <nx-icon name="trash" [size]="16" />
+      </button>
+    </div>
+
+    @if (canPickCustomer()) {
+      <button type="button" class="cart__customer" (click)="openCustomerPicker()">
+        <nx-icon name="user" [size]="16" />
+        <span>{{ customer()?.name ?? 'Consumidor final' }}</span>
+        <span class="nx-kbd">F4</span>
+      </button>
+    }
+
+    <div class="cart__items">
+      @for (item of cart(); track item.product.id) {
+        <div class="cart-item">
+          <div class="cart-item__top">
+            <span class="cart-item__name">{{ item.product.name }}</span>
+            <button type="button" class="nx-icon-button is-danger" (click)="remove(item)" aria-label="Remover item">
+              <nx-icon name="x" [size]="14" />
+            </button>
+          </div>
+          <div class="cart-item__controls">
+            <div class="qty">
+              <button type="button" (click)="changeQuantity(item, -1)" aria-label="Diminuir"><nx-icon name="minus" [size]="14" /></button>
+              <input
+                type="number"
+                [step]="['UN','CX','PCT'].includes(item.product.unit) ? 1 : 0.001"
+                min="0"
+                [ngModel]="item.quantity"
+                (change)="setQuantity(item, +$any($event.target).value)"
+                aria-label="Quantidade"
+              />
+              <button type="button" (click)="changeQuantity(item, 1)" aria-label="Aumentar"><nx-icon name="plus" [size]="14" /></button>
+            </div>
+            <span class="text-muted text-small">× {{ item.product.salePrice | currency }}</span>
+            <strong class="num">{{ item.product.salePrice * item.quantity - item.discount | currency }}</strong>
+          </div>
+          @if (canDiscount()) {
+            <label class="cart-item__discount">
+              Desconto
+              <input type="number" min="0" step="0.01" [ngModel]="item.discount || null" placeholder="0,00"
+                     (change)="setItemDiscount(item, +$any($event.target).value)" />
+            </label>
+          }
+          @if (item.quantity > item.product.currentStock) {
+            <small class="text-warning">Quantidade acima do estoque ({{ item.product.currentStock | number: '1.0-3' }}).</small>
+          }
+        </div>
+      } @empty {
+        <nx-empty-state icon="cart" title="Carrinho vazio" message="Busque ou leia o código de barras para adicionar produtos." />
+      }
+    </div>
+
+    <div class="cart__summary">
+      <div class="row"><span>Subtotal</span><span class="num">{{ subtotal() | currency }}</span></div>
+      @if (canDiscount()) {
+        <div class="row">
+          <span>Desconto na venda</span>
+          <input class="discount-input" type="number" min="0" step="0.01" placeholder="0,00"
+                 [ngModel]="saleDiscount() || null" (change)="setSaleDiscount(+$any($event.target).value)" aria-label="Desconto na venda" />
+        </div>
+      }
+      @if (itemDiscounts() + saleDiscount() > 0) {
+        <div class="row text-primary"><span>Descontos</span><span class="num">−{{ itemDiscounts() + saleDiscount() | currency }}</span></div>
+      }
+      <div class="row total"><span>Total</span><span class="num">{{ total() | currency }}</span></div>
+    </div>
+
+    <div class="cart__payments">
+      @for (line of payments(); track $index; let index = $index) {
+        <div class="payment">
+          <div class="payment__methods">
+            @for (method of methods; track method) {
+              <button type="button" [class.is-active]="line.method === method" (click)="selectMethod(index, method)">
+                {{ methodLabel(method) }}
+              </button>
+            }
+          </div>
+          <div class="payment__amount">
+            <label>
+              {{ line.method === 'CASH' ? 'Valor recebido' : 'Valor' }}
+              <input type="number" min="0" step="0.01" [placeholder]="(total() | number: '1.2-2') ?? ''"
+                     [ngModel]="line.amount || null" (change)="setAmount(index, +$any($event.target).value)" />
+            </label>
+            <button type="button" class="link" (click)="fillRemaining(index)">Restante</button>
+            @if (payments().length > 1) {
+              <button type="button" class="nx-icon-button is-danger" (click)="removePaymentLine(index)" aria-label="Remover pagamento">
+                <nx-icon name="x" [size]="14" />
+              </button>
+            }
+          </div>
+        </div>
+      }
+      <button type="button" class="link add-payment" (click)="addPaymentLine()">
+        <nx-icon name="plus" [size]="14" /> Dividir pagamento
+      </button>
+      @if (payments().length > 1 || paid() > 0) {
+        <div class="row text-small">
+          <span>{{ remaining() > 0 ? 'Falta' : 'Troco' }}</span>
+          <strong class="num" [class.text-warning]="remaining() > 0">{{ (remaining() > 0 ? remaining() : change()) | currency }}</strong>
+        </div>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <nx-alert tone="danger">{{ message }}</nx-alert>
+    }
+
+    <button nxButton type="button" size="lg" [block]="true" [loading]="submitting()" [disabled]="!cart().length"
+            (click)="finalize()">
+      Finalizar venda <span class="nx-kbd finalize-kbd">F9</span>
+    </button>
+  </aside>
+</div>
+
+@if (customerPickerOpen()) {
+  <nx-modal title="Selecionar cliente" (closed)="customerPickerOpen.set(false)">
+    <div class="nx-search">
+      <nx-icon name="search" [size]="16" />
+      <input class="nx-control" type="search" placeholder="Nome, CPF, telefone ou e-mail" [ngModel]="customerQuery()"
+             (ngModelChange)="searchCustomers($event)" />
+    </div>
+    <div class="customer-list">
+      <button type="button" class="customer-option" (click)="pickCustomer(null)">
+        <nx-icon name="user" [size]="16" /> Consumidor final
+      </button>
+      @for (customer of customerResults(); track customer.id) {
+        <button type="button" class="customer-option" (click)="pickCustomer(customer)">
+          <nx-icon name="user" [size]="16" />
+          <span>{{ customer.name }}</span>
+          <small>{{ customer.phone || customer.documentMasked }}</small>
+        </button>
+      }
+    </div>
+  </nx-modal>
+}
+
+@if (receipt(); as r) {
+  <nx-modal title="Venda finalizada" [subtitle]="'Venda nº ' + r.sale.number" (closed)="closeReceipt()">
+    <nx-receipt-view [receipt]="r" />
+    <ng-container modalFooter>
+      <button nxButton variant="secondary" type="button" (click)="print()"><nx-icon name="printer" [size]="16" /> Imprimir</button>
+      <button nxButton type="button" (click)="closeReceipt()">Nova venda</button>
+    </ng-container>
+  </nx-modal>
+}

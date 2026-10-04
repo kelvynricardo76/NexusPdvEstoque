@@ -1,0 +1,48 @@
+<div class="login">
+  <section class="login__brand" aria-labelledby="login-headline">
+    <div class="login__brand-glow" aria-hidden="true"></div>
+    <nx-logo class="login__brand-watermark" [size]="220" [glow]="true" aria-hidden="true" />
+
+    <div class="login__brand-inner">
+      <nx-logo [size]="56" [wordmark]="true" [glow]="true" />
+
+      <div class="login__pitch">
+        <p class="login__eyebrow">{{ eyebrow() }}</p>
+        <h1 id="login-headline" class="login__headline">
+          Seu negócio <span class="login__headline-accent">sob controle.</span>
+        </h1>
+        <p class="login__lead">
+          O Nexus PDV &amp; Estoque é a solução completa para gerenciar vendas, estoque e
+          finanças, com mais controle, agilidade e segurança em um só lugar.
+        </p>
+      </div>
+
+      <ul class="login__highlights">
+        @for (item of highlights; track item.title) {
+          <li class="login__highlight">
+            <span class="login__highlight-icon">
+              <nx-icon [name]="item.icon" [size]="24" />
+            </span>
+            <span>
+              <strong class="login__highlight-title">{{ item.title }}</strong>
+              <span class="login__highlight-text">{{ item.description }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+
+      <p class="login__tagline">Do caixa ao estoque, sempre com você.</p>
+    </div>
+  </section>
+
+  <main class="login__panel nx-theme-light">
+    <div class="login__panel-inner">
+      <div class="login__card">
+        <ng-content />
+      </div>
+      <p class="login__footer">
+        Nexus PDV &amp; Estoque © {{ currentYear }} • Um produto <strong>Nexus Development</strong>
+      </p>
+    </div>
+  </main>
+</div>
